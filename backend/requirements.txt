@@ -1,8 +1,8 @@
 fastapi
-uvicorn
-sqlmodel
+motor
 python-dotenv
-psycopg2-binary
-httpx
 passlib[bcrypt]
-python-jose
+python-jose[cryptography]
+uvicorn
+python-multipart
+pydantic[email]

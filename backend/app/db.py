@@ -1,8 +1,8 @@
-from sqlmodel import create_engine, Session
-from .config import DATABASE_URL
+import motor.motor_asyncio
+import os
+from dotenv import load_dotenv
 
-engine = create_engine(DATABASE_URL, echo=True)
-
-def get_session():
-    with Session(engine) as session:
-        yield session
+load_dotenv()
+MONGO_URL = os.getenv("MONGO_URL")
+client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_URL)
+db = client.workflow_db
