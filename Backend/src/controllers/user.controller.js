@@ -23,53 +23,52 @@ const generateAccessAndRefereshTokens = async (userId) => {
 }
 
 const registerUser = asyncHandler(async (req, res) => {
-  console.log("Received body:", req.body);
+    console.log("Received body:", req.body);
 
-  const { fullName, email, username, password } = req.body;
+    const { fullName, email, username, password } = req.body;
 
-  if (
-    [fullName, email, username, password].some((field) => field?.trim() === "")
-  ) {
-    console.log("Validation failed: missing fields");
-    throw new ApiError(400, "All fields are required");
-  }
+    if (
+        [fullName, email, username, password].some((field) => field?.trim() === "")
+    ) {
+        console.log("Validation failed: missing fields");
+        throw new ApiError(400, "All fields are required");
+    }
 
-  const existedUser = await User.findOne({
-    $or: [{ username }, { email }]
-  });
+    const existedUser = await User.findOne({
+        $or: [{ username }, { email }]
+    });
 
-  if (existedUser) {
-    console.log("User exists:", existedUser);
-    throw new ApiError(409, "User with email or username already exists");
-  }
+    if (existedUser) {
+        console.log("User exists:", existedUser);
+        throw new ApiError(409, "User with email or username already exists");
+    }
 
-  const user = await User.create({
-    fullName,
-    email: email.toLowerCase(),
-    password,
-    username
-  });
+    const user = await User.create({
+        fullName,
+        email: email.toLowerCase(),
+        password,
+        username
+    });
 
-  console.log("---------> User created:", user);
+    console.log("---------> User created:", user);
 
-  const createdUser = await User.findById(user._id).select(
-    "-password -refreshToken"
-  );
+    const createdUser = await User.findById(user._id).select(
+        "-password -refreshToken"
+    );
 
-  if (!createdUser) {
-    console.log("Failed to fetch created user");
-    throw new ApiError(500, "Something went wrong while registering the user");
-  }
+    if (!createdUser) {
+        console.log("Failed to fetch created user");
+        throw new ApiError(500, "Something went wrong while registering the user");
+    }
 
-  return res.status(201).json(
-    new ApiResponse(200, createdUser, "User registered Successfully")
-  );
+    return res.status(201).json(
+        new ApiResponse(200, createdUser, "User registered Successfully")
+    );
 });
-
 
 const loginUser = asyncHandler(async (req, res) => {
 
-    console.log("Received body:", req.body);
+    console.log("DEBUG BODY RECEIVED:", req.body);
     const { email, password } = req.body
 
     if (!email) {
@@ -96,18 +95,16 @@ const loginUser = asyncHandler(async (req, res) => {
 
     const accessTokenOptions = {
         httpOnly: true,
-        secure: process.env.NODE_ENV, 
-        sameSite: "Lax", 
+        secure: false,
+        sameSite: "Lax",
         maxAge: 24 * 60 * 60 * 1000
     };
-
     const refreshTokenOptions = {
         httpOnly: true,
-        secure: process.env.NODE_ENV,
+        secure: false,
         sameSite: "Lax",
         maxAge: 7 * 24 * 60 * 60 * 1000
     };
-
 
     return res
         .status(200)

@@ -6,7 +6,7 @@ const BASE_URL = `${import.meta.env.VITE_BASE_URL}api/v1/`;
 export const loginUser = async (formData) => {
   try {
     console.log("value 1 ===> ",formData)
-    const response = await axios.post(`${BASE_URL}users/login`, formData, {
+    const response = await axios.post(`${BASE_URL}users/hello`, formData, {
       withCredentials: true,
       headers: { 'Content-Type': 'application/json' },
     });
