@@ -5,12 +5,16 @@ const BASE_URL = `${import.meta.env.VITE_BASE_URL}api/v1/`;
 // LOGIN
 export const loginUser = async (formData) => {
   try {
-    console.log("value 1 ===> ",formData)
-    const response = await axios.post(`${BASE_URL}users/hello`, formData, {
-      withCredentials: true,
-      headers: { 'Content-Type': 'application/json' },
-    });
-    console.log("value 2===> ",response.data)
+    const response = await axios.post(
+      `${BASE_URL}users/login`,
+      formData,
+      {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
     return response.data;
   } catch (error) {
     console.error('API Error:', error.response?.data?.message || error.message);
@@ -21,9 +25,13 @@ export const loginUser = async (formData) => {
 // LOGOUT
 export const logoutUser = async () => {
   try {
-    const response = await axios.post(`${BASE_URL}users/logout`, {}, {
-      withCredentials: true,
-    });
+    const response = await axios.post(
+      `${BASE_URL}users/logout`,
+      {},
+      {
+        withCredentials: true,
+      }
+    );
     return response.data;
   } catch (error) {
     console.error('API Error:', error.response?.data?.message || error.message);
@@ -34,11 +42,15 @@ export const logoutUser = async () => {
 // REGISTER
 export const registerUser = async (formData) => {
   try {
-    console.log("-------> ",formData)
-    const response = await axios.post(`${BASE_URL}users/register`, formData, {
-      withCredentials: true,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    const response = await axios.post(
+      `${BASE_URL}users/register`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
     return response.data;
   } catch (error) {
     console.error('API Error:', error.response?.data?.message || error.message);
@@ -49,9 +61,13 @@ export const registerUser = async (formData) => {
 // REFRESH TOKEN
 export const refreshAccessToken = async () => {
   try {
-    const response = await axios.post(`${BASE_URL}users/refresh-token`, {}, {
-      withCredentials: true,
-    });
+    const response = await axios.post(
+      `${BASE_URL}users/refresh-token`,
+      {},
+      {
+        withCredentials: true,
+      }
+    );
     return response.data;
   } catch (error) {
     console.error('API Error:', error.response?.data?.message || error.message);
@@ -60,11 +76,14 @@ export const refreshAccessToken = async () => {
 };
 
 // GET CURRENT USER
-export const getCurrentUser = async () => {
+export const fetchCurrentUser = async () => {
   try {
-    const response = await axios.get(`${BASE_URL}users/current-user`, {
-      withCredentials: true,
-    });
+    const response = await axios.get(
+      `${BASE_URL}users/current-user`,
+      {
+        withCredentials: true,
+      }
+    );
     return response.data;
   } catch (error) {
     console.error('API Error:', error.response?.data?.message || error.message);

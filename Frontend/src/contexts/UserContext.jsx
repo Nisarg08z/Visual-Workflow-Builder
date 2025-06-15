@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
-import { getCurrentUser } from '../utils/api';
+import { fetchCurrentUser } from '../utils/api';
 
 export const UserContext = createContext();
 
@@ -10,7 +10,7 @@ export const UserProvider = ({ children }) => {
   // Check if the user is logged in
   const checkLogin = async () => {
     try {
-      const user = await getCurrentUser();
+      const user = await fetchCurrentUser();
       setuserDetail(user.data);
       setisLogedin(true);
     } catch {

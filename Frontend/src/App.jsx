@@ -4,19 +4,32 @@ import Layout from "./Layout.jsx";
 import HomePage from "./pages/HomePage";
 import Login from "./pages/Login.jsx";
 import SignUp from "./pages/SignUp.jsx";
+import { Toaster } from 'react-hot-toast';
 
 
 const App = () => {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route path="" element={<HomePage />} />
-        </Route>
-        <Route path="/login" element={<Login />} />
-        <Route path="/signUp" element={<SignUp />} />
-      </Routes>
-    </Router>
+    <>
+    <Toaster
+        position="bottom-right"
+        toastOptions={{
+          style: {
+            background: '#2d2d2d',
+            color: '#fff',
+          },
+        }}
+      />
+      <Router>
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route path="" element={<HomePage />} />
+          </Route>
+          <Route path="/login" element={<Login />} />
+          <Route path="/signUp" element={<SignUp />} />
+        </Routes>
+      </Router>
+    </>
+
   );
 };
 
