@@ -23,54 +23,61 @@ const generateAccessAndRefereshTokens = async (userId) => {
 }
 
 const registerUser = asyncHandler(async (req, res) => {
+  console.log("Received body:", req.body);
 
-    const { fullName, email, username, password } = req.body
+  const { fullName, email, username, password } = req.body;
 
-    if (
-        [fullName, email, username, password].some((field) => field?.trim() === "")
-    ) {
-        throw new ApiError(400, "All fields are required")
-    }
+  if (
+    [fullName, email, username, password].some((field) => field?.trim() === "")
+  ) {
+    console.log("Validation failed: missing fields");
+    throw new ApiError(400, "All fields are required");
+  }
 
-    const existedUser = await User.findOne({
-        $or: [{ username }, { email }]
-    })
+  const existedUser = await User.findOne({
+    $or: [{ username }, { email }]
+  });
 
-    if (existedUser) {
-        throw new ApiError(409, "User with email or username already exists")
-    }
+  if (existedUser) {
+    console.log("User exists:", existedUser);
+    throw new ApiError(409, "User with email or username already exists");
+  }
 
-    const user = await User.create({
-        fullName,
-        email: email.toLowerCase(),
-        password,
-        username
-    })
+  const user = await User.create({
+    fullName,
+    email: email.toLowerCase(),
+    password,
+    username
+  });
 
-    const createdUser = await User.findById(user._id).select(
-        "-password -refreshToken"
-    )
+  console.log("---------> User created:", user);
 
-    if (!createdUser) {
-        throw new ApiError(500, "Something went wrong while registering the user")
-    }
+  const createdUser = await User.findById(user._id).select(
+    "-password -refreshToken"
+  );
 
-    return res.status(201).json(
-        new ApiResponse(200, createdUser, "User registered Successfully")
-    )
+  if (!createdUser) {
+    console.log("Failed to fetch created user");
+    throw new ApiError(500, "Something went wrong while registering the user");
+  }
 
-})
+  return res.status(201).json(
+    new ApiResponse(200, createdUser, "User registered Successfully")
+  );
+});
+
 
 const loginUser = asyncHandler(async (req, res) => {
 
-    const { username, password } = req.body
+    console.log("Received body:", req.body);
+    const { email, password } = req.body
 
-    if (!username) {
-        throw new ApiError(400, "username is required")
+    if (!email) {
+        throw new ApiError(400, "email is required")
     }
 
     const user = await User.findOne({
-        $or: [{ username }]
+        $or: [{ email }]
     })
 
     if (!user) {
@@ -89,15 +96,15 @@ const loginUser = asyncHandler(async (req, res) => {
 
     const accessTokenOptions = {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production", 
-        sameSite: "None", 
+        secure: process.env.NODE_ENV, 
+        sameSite: "Lax", 
         maxAge: 24 * 60 * 60 * 1000
     };
 
     const refreshTokenOptions = {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "None",
+        secure: process.env.NODE_ENV,
+        sameSite: "Lax",
         maxAge: 7 * 24 * 60 * 60 * 1000
     };
 

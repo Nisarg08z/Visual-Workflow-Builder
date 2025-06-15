@@ -10,12 +10,11 @@ import connectionRouter from './routes/connection.routes.js';
 const app = express();
 
 app.use(cors({
-    origin: process.env.CORS_ORIGIN || '*', 
+    origin: process.env.CORS_ORIGIN, 
     credentials: true
 }));
 
 app.use(express.json({ limit: "16kb" }));
-
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 
 app.use(express.static("public"));
@@ -25,23 +24,12 @@ app.use(cookieParser());
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/workflows", workflowRouter);
 app.use("/api/v1/executions", workflowExecutionRouter);
-app.use("/api/v1/connections", connectionRouter);
+app.use("/api/v1/connections", connectionRouter)
 
-
-app.use((err, req, res, next) => {
-    if (err instanceof ApiError) { 
-        return res.status(err.statusCode).json({
-            success: err.success,
-            message: err.message,
-            errors: err.errors
-        });
-    }
-    console.error(err);
-    res.status(500).json({
-        success: false,
-        message: "An unexpected error occurred",
-        errors: []
-    });
+app.use((req, res, next) => {
+  console.log("DEBUG: Incoming request body ->", req.body);
+  next();
 });
+
 
 export { app }; 
