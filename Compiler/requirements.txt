@@ -1,5 +1,5 @@
-langchain-openai>=0.1.0
-langgraph>=0.0.50
-openai>=1.0.0
-langgraph-checkpoint-mongodb>=0.1.0
-pymongo>=4.0
+langchain-openai
+langgraph
+openai
+langgraph-checkpoint-mongodb
+pymongo

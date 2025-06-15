@@ -1,22 +1,26 @@
-import express from "express";
-import cors from "cors";
-import cookieParser from "cookie-parser";
+import express from 'express';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+
+import userRouter from './routes/user.route.js';
+import workflowRouter from './routes/workflow.routes.js';
+import workflowExecutionRouter from './routes/workflowExecution.routes.js';
+import connectionRouter from './routes/connection.routes.js';
 
 const app = express();
 
 app.use(cors({
-  origin: process.env.CORS_ORIGIN, 
-  credentials: true
+    origin: process.env.CORS_ORIGIN || '*', 
+    credentials: true
 }));
 
 app.use(express.json({ limit: "16kb" }));
-app.use(express.urlencoded({ extended: true, limit: "16kb" }));
-app.use(cookieParser());
 
-import userRouter from './routes/user.routes.js';
-import workflowRouter from './routes/workflow.routes.js';
-import workflowExecutionRouter from './routes/workflowExecution.routes.js';
-import connectionRouter from './routes/connection.routes.js';
+app.use(express.urlencoded({ extended: true, limit: "16kb" }));
+
+app.use(express.static("public"));
+
+app.use(cookieParser());
 
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/workflows", workflowRouter);
@@ -24,4 +28,20 @@ app.use("/api/v1/executions", workflowExecutionRouter);
 app.use("/api/v1/connections", connectionRouter);
 
 
-export { app };
+app.use((err, req, res, next) => {
+    if (err instanceof ApiError) { 
+        return res.status(err.statusCode).json({
+            success: err.success,
+            message: err.message,
+            errors: err.errors
+        });
+    }
+    console.error(err);
+    res.status(500).json({
+        success: false,
+        message: "An unexpected error occurred",
+        errors: []
+    });
+});
+
+export { app }; 
