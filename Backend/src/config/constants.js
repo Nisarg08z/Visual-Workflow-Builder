@@ -1,3 +1,6 @@
+import { fileURLToPath } from 'url';
 import path from 'path';
 
-export const PYTHON_EXECUTOR_SCRIPT = path.resolve(process.cwd(), '..', 'Compiler', 'main.py');
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+export const PYTHON_EXECUTOR_SCRIPT = path.resolve(__dirname, '..', '..', 'Compiler', 'main.py');

@@ -3,6 +3,14 @@ import json
 from workflow.executor import build_and_run_langgraph_workflow
 
 if __name__ == "__main__":
+    if len(sys.argv) == 2 and sys.argv[1] == "--test":
+        print(json.dumps({
+            "status": "success",
+            "output_data": {"result": "Hello from Python"},
+            "logs": [{"level": "info", "message": "Python script executed successfully"}]
+        }))
+        sys.exit(0)
+
     if len(sys.argv) < 5:
         print(json.dumps({
             "status": "failed",

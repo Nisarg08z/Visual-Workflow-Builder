@@ -1,6 +1,9 @@
 import os
 from langchain_openai import ChatOpenAI
+from dotenv import load_dotenv
 from tools.tools import tools
+
+load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 if not OPENAI_API_KEY:

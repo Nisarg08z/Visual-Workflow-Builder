@@ -18,23 +18,69 @@ def build_and_run_langgraph_workflow(workflow_def, initial_input_str, thread_id,
     try:
         client, checkpointer = get_mongo_checkpointer(mongo_uri)
 
-        # Define the workflow
         builder = StateGraph(AgentState)
-        builder.add_node("llm", call_llm_node)
-        builder.add_node("tool_executor", execute_tools_node)
-        builder.add_node("end", end_workflow_node)
 
-        builder.set_entry_point("llm")
-        builder.add_conditional_edges(
-            "llm",
-            should_continue,
-            {
-                "continue": "tool_executor",
-                "end": "end"
+        # 1. Register known functions for types
+        node_type_to_fn = {
+            "start": call_llm_node,
+            "llm": call_llm_node,
+            "tool_executor": execute_tools_node,
+            "end": end_workflow_node
+        }
+
+        node_ids = set()
+        start_node_id = None
+
+        # 2. Add nodes from workflow_def
+        for node in workflow_def.get("nodes", []):
+            node_id = node["id"]
+            node_type = node.get("type", "llm")
+            fn = node_type_to_fn.get(node_type)
+
+            if not fn:
+                return {
+                    "status": "failed",
+                    "error": f"Unknown node type: {node_type}",
+                    "logs": []
+                }
+
+            builder.add_node(node_id, fn)
+            node_ids.add(node_id)
+
+            if node_type == "start":
+                start_node_id = node_id
+
+        if not start_node_id:
+            return {
+                "status": "failed",
+                "error": "No start node found",
+                "logs": []
             }
-        )
-        builder.add_edge("tool_executor", "llm")
-        builder.add_edge("end", END)
+
+        builder.set_entry_point(start_node_id)
+
+        # 3. Add edges
+        for edge in workflow_def.get("edges", []):
+            source = edge["source"]
+            target = edge["target"]
+
+            # Special case: conditional from LLM
+            if source == "llm":
+                builder.add_conditional_edges(
+                    "llm",
+                    should_continue,
+                    {
+                        "continue": "tool_executor",
+                        "end": "end"
+                    }
+                )
+            else:
+                if target in node_ids:
+                    builder.add_edge(source, target)
+                elif target == "end":
+                    builder.add_edge(source, END)
+
+        builder.add_edge("end", END)  # Safety net
 
         graph = builder.compile()
         app = graph.with_config({"checkpointer": checkpointer})
@@ -61,3 +107,4 @@ def build_and_run_langgraph_workflow(workflow_def, initial_input_str, thread_id,
             "error": str(e),
             "logs": []
         }
+

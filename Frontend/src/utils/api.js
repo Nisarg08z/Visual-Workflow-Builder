@@ -118,10 +118,8 @@ export const addProject = async (projectId) => {
   }
 };
 
-// frontend/src/api/index.js
-
 const getAuthHeaders = () => {
-    const accessToken = localStorage.getItem('accessToken'); // Assuming token is stored here
+    const accessToken = localStorage.getItem('token'); 
     if (accessToken) {
         return {
             'Content-Type': 'application/json',
@@ -129,25 +127,6 @@ const getAuthHeaders = () => {
         };
     }
     return { 'Content-Type': 'application/json' };
-};
-
-// --- User/Auth API Calls (simplified, you have full auth in backend) ---
-export const loginUserApi = async (username, password) => {
-    const response = await fetch(`${BASE_URL}users/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-    });
-    return response.json();
-};
-
-export const registerUserApi = async (fullName, email, username, password) => {
-    const response = await fetch(`${BASE_URL}users/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fullName, email, username, password }),
-    });
-    return response.json();
 };
 
 // --- Connections API Calls ---
