@@ -4,6 +4,8 @@ import Layout from "./Layout.jsx";
 import HomePage from "./pages/HomePage";
 import Login from "./pages/Login.jsx";
 import SignUp from "./pages/SignUp.jsx";
+import WorkflowBuilderPage from "./pages/WorkflowBuilderPage.jsx"; 
+import WorkflowHistoryPage from "./pages/WorkflowHistoryPage.jsx"; 
 import { Toaster } from 'react-hot-toast';
 
 
@@ -22,8 +24,10 @@ const App = () => {
       <Router>
         <Routes>
           <Route path="/" element={<Layout />}>
-            <Route path="" element={<HomePage />} />
+            <Route index element={<HomePage />} /> 
+            <Route path="workflow-history" element={<WorkflowHistoryPage />} /> 
           </Route>
+          <Route path="/new-project" element={<WorkflowBuilderPage />} /> 
           <Route path="/login" element={<Login />} />
           <Route path="/signUp" element={<SignUp />} />
         </Routes>

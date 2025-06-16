@@ -117,3 +117,140 @@ export const addProject = async (projectId) => {
     throw error.response?.data || error;
   }
 };
+
+// frontend/src/api/index.js
+
+const getAuthHeaders = () => {
+    const accessToken = localStorage.getItem('accessToken'); // Assuming token is stored here
+    if (accessToken) {
+        return {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+        };
+    }
+    return { 'Content-Type': 'application/json' };
+};
+
+// --- User/Auth API Calls (simplified, you have full auth in backend) ---
+export const loginUserApi = async (username, password) => {
+    const response = await fetch(`${BASE_URL}users/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+    });
+    return response.json();
+};
+
+export const registerUserApi = async (fullName, email, username, password) => {
+    const response = await fetch(`${BASE_URL}users/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fullName, email, username, password }),
+    });
+    return response.json();
+};
+
+// --- Connections API Calls ---
+export const createConnectionApi = async (connectionData) => {
+    const response = await fetch(`${BASE_URL}connections`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(connectionData),
+    });
+    return response.json();
+};
+
+export const getConnectionsApi = async () => {
+    const response = await fetch(`${BASE_URL}connections`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+    });
+    return response.json();
+};
+
+export const updateConnectionApi = async (id, connectionData) => {
+    const response = await fetch(`${BASE_URL}connections/${id}`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(connectionData),
+    });
+    return response.json();
+};
+
+export const deleteConnectionApi = async (id) => {
+    const response = await fetch(`${BASE_URL}connections/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+    });
+    return response.json();
+};
+
+// --- Workflows API Calls ---
+export const createWorkflowApi = async (workflowData) => {
+    const response = await fetch(`${BASE_URL}workflows`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(workflowData),
+    });
+    return response.json();
+};
+
+export const getWorkflowsApi = async () => {
+    const response = await fetch(`${BASE_URL}workflows`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+    });
+    return response.json();
+};
+
+export const getWorkflowByIdApi = async (id) => {
+    const response = await fetch(`${BASE_URL}workflows/${id}`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+    });
+    return response.json();
+};
+
+export const updateWorkflowApi = async (id, workflowData) => {
+    const response = await fetch(`${BASE_URL}workflows/${id}`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(workflowData),
+    });
+    return response.json();
+};
+
+export const deleteWorkflowApi = async (id) => {
+    const response = await fetch(`${BASE_URL}workflows/${id}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+    });
+    return response.json();
+};
+
+// --- Workflow Execution API Calls ---
+export const runWorkflowApi = async (workflowId, inputData) => {
+    const response = await fetch(`${BASE_URL}executions/run`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ workflowId, inputData }),
+    });
+    return response.json();
+};
+
+export const getWorkflowExecutionsApi = async (workflowId = '') => {
+    const query = workflowId ? `?workflowId=${workflowId}` : '';
+    const response = await fetch(`${BASE_URL}executions${query}`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+    });
+    return response.json();
+};
+
+export const getWorkflowExecutionByIdApi = async (id) => {
+    const response = await fetch(`${BASE_URL}executions/${id}`, {
+        method: 'GET',
+        headers: getAuthHeaders(),
+    });
+    return response.json();
+};

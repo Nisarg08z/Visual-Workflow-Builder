@@ -1,10 +1,19 @@
 import React from 'react';
 import ThreeDAnimation from '../components/common/ThreeDAnimation';
 import Button from '../components/common/Button';
+import { useNavigate } from 'react-router-dom';
 
 const HomePage = () => {
-  const handleNewProjectClick = () => alert('New Project clicked!');
-  const handleHistoryClick = () => alert('Workflow History clicked!');
+
+  const navigate = useNavigate();
+  
+  const handleNewProjectClick = () => {
+    navigate('/new-project');
+  };
+
+  const handleHistoryClick = () => {
+    navigate('/workflow-history');
+  };
 
   return (
     <div className="flex flex-col md:flex-row items-center justify-center p-8 gap-48">
