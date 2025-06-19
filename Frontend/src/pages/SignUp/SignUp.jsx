@@ -1,19 +1,20 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { loginUser } from '../utils/api';
-import { UserContext } from '../contexts/UserContext';
+import { registerUser } from '../../utils/api';
 import { Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import AuthAnimation from '../components/common/AuthAnimation';
+// import AuthAnimation from '../components/common/AuthAnimation';
 
-const Login = () => {
+const SignUp = () => {
   const navigate = useNavigate();
-  const { setisLogedin, setuserDetail } = useContext(UserContext);
-
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [formData, setFormData] = useState({
+    fullName: '',
+    username: '',
+    email: '',
+    password: '',
+  });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -22,8 +23,11 @@ const Login = () => {
 
   const validateForm = () => {
     const newErrors = {};
+    if (!formData.fullName.trim()) newErrors.fullName = 'Full name is required.';
+    if (!formData.username.trim()) newErrors.username = 'Username is required.';
     if (!formData.email.trim()) newErrors.email = 'Email is required.';
     if (!formData.password.trim()) newErrors.password = 'Password is required.';
+    if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters.';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -31,19 +35,19 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
+
     try {
       setLoading(true);
-      const response = await loginUser(formData);
-      localStorage.setItem('token', response.data.accessToken);
+      const response = await registerUser(formData);
+
       if (response.success) {
-        setisLogedin(true);
-        setuserDetail(response.data.user);
-        navigate('/', { replace: true });
+        toast.success('Sign Up successful!');
+        navigate('/login');
       } else {
-        toast.error(response.message || 'Login failed!');
+        toast.error(response.message || 'Sign Up failed!');
       }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Sign Up error:', error);
       toast.error(error.response?.data?.message || 'Something went wrong.');
     } finally {
       setLoading(false);
@@ -52,18 +56,44 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row items-center justify-center bg-gray-100 text-gray-900">
-      <div className="hidden md:flex flex-1 items-center justify-center">
+      {/* <div className="hidden md:flex flex-1 items-center justify-center">
         <AuthAnimation />
-      </div>
+      </div> */}
 
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="bg-white border border-gray-200 p-8 rounded-2xl shadow-md w-full max-w-md animate-fade-in-up">
           <div className="text-center mb-6">
-            <h2 className="text-3xl font-semibold">Welcome Back</h2>
-            <p className="text-sm text-gray-500">Login to your account</p>
+            <h2 className="text-3xl font-semibold">Create Account</h2>
+            <p className="text-sm text-gray-500">Join us today</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label htmlFor="fullName" className="block text-sm font-medium text-gray-700">Full Name</label>
+              <input
+                type="text"
+                id="fullName"
+                name="fullName"
+                value={formData.fullName}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 mt-1 rounded-lg bg-gray-100 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
+              />
+              {errors.fullName && <p className="text-sm text-red-500 mt-1">{errors.fullName}</p>}
+            </div>
+
+            <div>
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700">Username</label>
+              <input
+                type="text"
+                id="username"
+                name="username"
+                value={formData.username}
+                onChange={handleInputChange}
+                className="w-full px-4 py-2 mt-1 rounded-lg bg-gray-100 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
+              />
+              {errors.username && <p className="text-sm text-red-500 mt-1">{errors.username}</p>}
+            </div>
+
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
               <input
@@ -96,17 +126,17 @@ const Login = () => {
               className="w-full flex justify-center items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 rounded-lg transition disabled:opacity-50"
             >
               {loading && <Loader2 className="animate-spin h-5 w-5" />}
-              {loading ? 'Logging in...' : 'Log In'}
+              {loading ? 'Signing Up...' : 'Sign Up'}
             </button>
           </form>
 
           <p className="text-center text-sm text-gray-500 mt-5">
-            Don’t have an account?{' '}
+            Already have an account?{' '}
             <span
-              onClick={() => navigate('/signup')}
+              onClick={() => navigate('/login')}
               className="text-purple-600 font-medium cursor-pointer hover:underline"
             >
-              Sign Up
+              Log In
             </span>
           </p>
         </div>
@@ -115,4 +145,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default SignUp;

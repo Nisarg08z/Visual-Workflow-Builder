@@ -11,6 +11,11 @@ if __name__ == "__main__":
         }))
         sys.exit(0)
 
+    if len(sys.argv) == 2 and sys.argv[1] == "--nodes":
+        from agent.node_registry import get_available_nodes
+        print(json.dumps(get_available_nodes()))
+        sys.exit(0)
+
     if len(sys.argv) < 5:
         print(json.dumps({
             "status": "failed",

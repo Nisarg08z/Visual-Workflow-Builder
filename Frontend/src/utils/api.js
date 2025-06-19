@@ -166,6 +166,7 @@ export const deleteConnectionApi = async (id) => {
 
 // --- Workflows API Calls ---
 export const createWorkflowApi = async (workflowData) => {
+  console.log("================>", workflowData)
     const response = await fetch(`${BASE_URL}workflows`, {
         method: 'POST',
         headers: getAuthHeaders(),

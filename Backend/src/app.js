@@ -18,7 +18,9 @@ import userRouter from './routes/user.route.js';
 import workflowRouter from './routes/workflow.routes.js';
 import workflowExecutionRouter from './routes/workflowExecution.routes.js';
 import connectionRouter from './routes/connection.routes.js';
+import nodeRouter from './routes/nodes.route.js';
 
+app.use("/api/v1/nodes", nodeRouter);
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/workflows", workflowRouter);
 app.use("/api/v1/executions", workflowExecutionRouter);

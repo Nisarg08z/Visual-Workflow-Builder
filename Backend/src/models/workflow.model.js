@@ -2,46 +2,60 @@ import mongoose from 'mongoose';
 
 const nodeSchema = new mongoose.Schema(
     {
-        id: { 
-            type: String, 
-            required: true 
+        id: {
+            type: String,
+            required: true
         },
-        type: { 
-            type: String, 
-            required: true 
+        type: {
+            type: String,
+            required: true
         },
-        label: { 
-            type: String, 
-            required: true 
+        data: {
+            label: {
+                type: String,
+                required: true
+            },
         },
-        x: { 
-            type: Number, 
-            required: true 
+        position: {
+            x: {
+                type: Number,
+                required: true
+            },
+            y: {
+                type: Number,
+                required: true
+            },
         },
-        y: { 
-            type: Number, 
-            required: true 
+        measured: {
+            width: {
+                type: Number,
+                required: true
+            },
+            height: {
+                type: Number,
+                required: true
+            }
         },
-        properties: { 
-            ype: mongoose.Schema.Types.Mixed, 
-            default: {} 
+        properties: {
+            ype: mongoose.Schema.Types.Mixed,
+            default: {}
         },
     }
 );
 
 const edgeSchema = new mongoose.Schema(
     {
-        id: { 
-            type: String, 
-            required: true 
+        id: {
+            type: String,
+            required: true
         },
-        source: { 
-            type: String, 
-            required: true 
+        source: {
+            type: String,
+            required: true
         },
-        target: { 
-            type: String, 
-            required: true 
+        target: {
+            type: String,
+            required: true
         },
     }
 );

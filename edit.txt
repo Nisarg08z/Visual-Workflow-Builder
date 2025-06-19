@@ -1,0 +1,300 @@
+visual workflow builder/Compiler/
+
+agent/conditionals.py
+def should_continue(state):
+    last_message = state["messages"][-1]
+    if "tool_calls" in last_message.additional_kwargs and last_message.additional_kwargs["tool_calls"]:
+        return "continue"
+    return "end"
+
+
+agent/nodes.py
+from langchain_core.messages import HumanMessage, AIMessage
+from tools.tools import tools
+from llm.llm_init import llm_with_tools
+from utils.logger import log
+
+def call_llm_node(state):
+    user_input = state.get("current_workflow_data", {}).get("input", "")
+    logs = state.get("workflow_logs", [])
+
+    if not user_input:
+        logs.append(log("error", "No user input provided in workflow state."))
+        return {
+            "messages": state.get("messages", []),
+            "workflow_logs": logs,
+        }
+
+    logs.append(log("info", f"Calling LLM with input: {user_input}"))
+
+    messages = state.get("messages", [])
+    messages.append(HumanMessage(content=user_input))
+
+    ai_response = llm_with_tools.invoke(messages)
+
+    logs.append(log("info", f"LLM responded with: {ai_response.content}"))
+    messages.append(ai_response)
+
+    tool_calls = ai_response.additional_kwargs.get("tool_calls", [])
+
+    return {
+        "messages": messages,
+        "tool_calls": tool_calls,
+        "workflow_logs": logs
+    }
+
+
+def execute_tools_node(state):
+    tool_calls = state.get("tool_calls", [])
+    logs = state.get("workflow_logs", [])
+    responses = []
+
+    logs.append(log("info", f"Executing {len(tool_calls)} tool call(s)"))
+
+    for call in tool_calls:
+        tool_name = call.get("name")
+        args = call.get("args", {})
+
+        tool_func = next((t for t in tools if t.name == tool_name), None)
+        if not tool_func:
+            error_msg = f"Tool '{tool_name}' not found."
+            logs.append(log("error", error_msg))
+            responses.append(error_msg)
+            continue
+
+        try:
+            result = tool_func.invoke(args)
+            output, tool_log = result if isinstance(result, tuple) else (result, log(f"Tool {tool_name} executed."))
+            logs.append(tool_log)
+            responses.append(output)
+        except Exception as e:
+            error_msg = f"Error running tool '{tool_name}': {str(e)}"
+            logs.append(log("error", error_msg))
+            responses.append(error_msg)
+
+    return {
+        "tool_response": responses,
+        "workflow_logs": logs
+    }
+
+
+def end_workflow_node(state):
+    logs = state.get("workflow_logs", [])
+    logs.append(log("info", "Workflow reached end node."))
+    return {
+        "workflow_logs": logs
+    }
+
+
+agent/state.py
+from typing import TypedDict, Annotated, List, Dict, Any
+from langchain_core.messages import BaseMessage
+
+class AgentState(TypedDict):
+    messages: Annotated[List[BaseMessage], lambda a, b: a + b]
+    tool_calls: List[Dict]
+    tool_response: Any
+    current_workflow_data: Dict[str, Any]
+    workflow_logs: Annotated[List[Dict[str, Any]], lambda a, b: a + b]
+
+llm/llm_init.py
+import os
+from langchain_openai import ChatOpenAI
+from dotenv import load_dotenv
+from tools.tools import tools
+
+load_dotenv()
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+if not OPENAI_API_KEY:
+    raise ValueError("OPENAI_API_KEY is not set.")
+
+llm = ChatOpenAI(model="gpt-4o", temperature=0.7, api_key=OPENAI_API_KEY)
+llm_with_tools = llm.bind_tools(tools)
+
+tools/tools.py
+from datetime import datetime
+from langchain_core.tools import tool
+
+@tool
+def simple_data_processor(data: str) -> str:
+    """
+    Converts the input data to uppercase, appends '_PROCESSED', and returns it.
+    Also logs the processing information with a timestamp.
+    """
+    processed = data.upper() + "_PROCESSED"
+    log_entry = {
+        "timestamp": datetime.now().isoformat(),
+        "level": "info",
+        "message": f"Processed data: {data} -> {processed}"
+    }
+    print(log_entry)  
+    return processed
+
+tools = [simple_data_processor]
+
+utils/logger.py
+from datetime import datetime
+
+def log(message: str, level: str = "info") -> dict:
+    return {
+        "timestamp": datetime.now().isoformat(),
+        "level": level,
+        "message": message
+    }
+
+
+utils/mongo.py
+from pymongo import MongoClient
+from langgraph.checkpoint.mongodb import MongoDBSaver
+
+def get_mongo_checkpointer(mongo_uri):
+    client = MongoClient(mongo_uri)
+    return client, MongoDBSaver(client)
+
+workflow/executor.py
+import json
+from langgraph.graph import StateGraph, END
+from agent.state import AgentState
+from agent.nodes import call_llm_node, execute_tools_node, end_workflow_node
+from agent.conditionals import should_continue
+from utils.mongo import get_mongo_checkpointer
+
+def build_and_run_langgraph_workflow(workflow_def, initial_input_str, thread_id, mongo_uri):
+    try:
+        initial_input = json.loads(initial_input_str)
+    except json.JSONDecodeError:
+        return {
+            "status": "failed",
+            "error": "Invalid initial input JSON",
+            "logs": []
+        }
+
+    try:
+        client, checkpointer = get_mongo_checkpointer(mongo_uri)
+
+        builder = StateGraph(AgentState)
+
+        # 1. Register known functions for types
+        node_type_to_fn = {
+            "start": call_llm_node,
+            "llm": call_llm_node,
+            "tool_executor": execute_tools_node,
+            "end": end_workflow_node
+        }
+
+        node_ids = set()
+        start_node_id = None
+
+        # 2. Add nodes from workflow_def
+        for node in workflow_def.get("nodes", []):
+            node_id = node["id"]
+            node_type = node.get("type", "llm")
+            fn = node_type_to_fn.get(node_type)
+
+            if not fn:
+                return {
+                    "status": "failed",
+                    "error": f"Unknown node type: {node_type}",
+                    "logs": []
+                }
+
+            builder.add_node(node_id, fn)
+            node_ids.add(node_id)
+
+            if node_type == "start":
+                start_node_id = node_id
+
+        if not start_node_id:
+            return {
+                "status": "failed",
+                "error": "No start node found",
+                "logs": []
+            }
+
+        builder.set_entry_point(start_node_id)
+
+        # 3. Add edges
+        for edge in workflow_def.get("edges", []):
+            source = edge["source"]
+            target = edge["target"]
+
+            # Special case: conditional from LLM
+            if source == "llm":
+                builder.add_conditional_edges(
+                    "llm",
+                    should_continue,
+                    {
+                        "continue": "tool_executor",
+                        "end": "end"
+                    }
+                )
+            else:
+                if target in node_ids:
+                    builder.add_edge(source, target)
+                elif target == "end":
+                    builder.add_edge(source, END)
+
+        builder.add_edge("end", END)  # Safety net
+
+        graph = builder.compile()
+        app = graph.with_config({"checkpointer": checkpointer})
+
+        inputs = {
+            "messages": [],
+            "tool_calls": [],
+            "tool_response": None,
+            "workflow_logs": [],
+            "current_workflow_data": initial_input
+        }
+
+        final_state = app.invoke(inputs, config={"configurable": {"thread_id": thread_id}})
+
+        return {
+            "status": "success",
+            "output_data": final_state.get("current_workflow_data", {}),
+            "logs": final_state.get("workflow_logs", [])
+        }
+
+    except Exception as e:
+        return {
+            "status": "failed",
+            "error": str(e),
+            "logs": []
+        }
+
+main.py
+import sys
+import json
+from workflow.executor import build_and_run_langgraph_workflow
+
+if __name__ == "__main__":
+    if len(sys.argv) == 2 and sys.argv[1] == "--test":
+        print(json.dumps({
+            "status": "success",
+            "output_data": {"result": "Hello from Python"},
+            "logs": [{"level": "info", "message": "Python script executed successfully"}]
+        }))
+        sys.exit(0)
+
+    if len(sys.argv) < 5:
+        print(json.dumps({
+            "status": "failed",
+            "error": "Usage: python main.py <workflow_json> <initial_input> <thread_id> <mongo_uri>"
+        }), file=sys.stderr)
+        sys.exit(1)
+
+    workflow_json_str = sys.argv[1]
+    initial_input = sys.argv[2]
+    thread_id = sys.argv[3]
+    mongo_uri = sys.argv[4]
+
+    try:
+        workflow_def = json.loads(workflow_json_str)
+    except json.JSONDecodeError:
+        print(json.dumps({"status": "failed", "error": "Invalid workflow JSON"}), file=sys.stderr)
+        sys.exit(1)
+
+    result = build_and_run_langgraph_workflow(workflow_def, initial_input, thread_id, mongo_uri)
+    print(json.dumps(result))
+
