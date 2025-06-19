@@ -85,7 +85,7 @@ const Header = () => {
               <div className="flex flex-col">
                 <button
                   onClick={() => {
-                    navigate(`/profile/${userDetail?.username}`);
+                    navigate(`/Dashboard`);
                     setDropdownOpen(false);
                   }}
                   className="text-left px-5 py-3 text-sm text-gray-800 hover:bg-orange-100 hover:text-orange-600 transition duration-150"

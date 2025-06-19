@@ -70,7 +70,7 @@ const Login = () => {
               type="email"
               id="email"
               name="email"
-              value={formData.email}
+              value={formData.email.toLowerCase()}
               onChange={handleInputChange}
               className="w-full px-4 py-2 mt-1 rounded-lg bg-white text-black border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500 transition"
             />

@@ -1,11 +1,15 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 const Footer = () => {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const navigate = useNavigate();
+
   return (
+    
     <footer className="w-full bg-white text-black  border-gray-200">
       <div className="max-w-7xl mx-auto w-full px-6 py-20 flex flex-col items-center gap-10">
         {/* Tagline / Branding */}
@@ -14,7 +18,9 @@ const Footer = () => {
         </h2>
 
         {/* CTA Button */}
-        <button className="rounded-full border border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white transition-all duration-300 font-medium shadow-sm hover:shadow-md px-8 py-3 text-lg">
+        <button className="rounded-full border border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white transition-all duration-300 font-medium shadow-sm hover:shadow-md px-8 py-3 text-lg"
+        onClick={() => navigate("/workflow")}
+        >
           Start Building Your Workflow
         </button>
 

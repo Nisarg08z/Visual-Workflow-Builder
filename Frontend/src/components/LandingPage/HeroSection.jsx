@@ -3,8 +3,12 @@ import Lottie from "lottie-react";
 import animationData from "../../assets/HeroSectionAnimation.json";
 import FadeInOnScroll from "../layout/FadeInOnScroll";
 import "../../styles/hero.css";
+import { useNavigate } from "react-router-dom";
 
 const HeroSection = () => {
+
+  const navigate = useNavigate();
+
   return (
     <FadeInOnScroll>
       <section className="flex flex-col md:flex-row items-center justify-center gap-12 px-6 py-10 min-h-10">
@@ -24,7 +28,9 @@ const HeroSection = () => {
             Design and execute AI-powered workflows without writing complex code.
             Drag, drop, connect, and run with ease.
           </p>
-          <button className="border border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white transition-all duration-300 font-medium shadow-sm hover:shadow-md mt-2 px-6 py-2 rounded-full ">
+          <button className="border border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white transition-all duration-300 font-medium shadow-sm hover:shadow-md mt-2 px-6 py-2 rounded-full "
+            onClick={() => navigate("/workflow")}
+          >
             Start Building
           </button>
         </div>
