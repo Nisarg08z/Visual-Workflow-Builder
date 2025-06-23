@@ -1,1 +1,0 @@
-export const DB_NAME = "visual_workflow_builder"
